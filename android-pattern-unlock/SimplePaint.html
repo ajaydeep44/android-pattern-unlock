@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<h1 style="color:blue"><center>Simple Paint App</center></h1>
+<style>
+#resetb{
+left:1050px;  
+top:580px;
+position:fixed;
+}
+</style>
+<body>
+<canvas id="myCanvas" width="1000" height="500" onreset="erase()" style="position:absolute; top:80px; left:10%; border:2px solid;"></canvas>
+<script>
+var canvas,
+context, shapes,
+dragging = false, draggingtoMove = false,dragstopped = 0,
+    dragStartLocation,dragEndLocation,
+    snapshot;
+ var numShapes;
+function initiate() {
+    numShapes = 100;
+    shapes = [];
+    canvas = document.getElementById('myCanvas');
+    context = canvas.getContext('2d');
+    canvas.addEventListener('mousedown', dragStart, false);
+    canvas.addEventListener('mousemove', drag, false);
+    canvas.addEventListener('mouseup', dragStop, false);
+    canvas.addEventListener('dblclick', dblclickerase);
+}
+
+ // Doubleclick erase function
+function dblclickerase(evt){
+    dragstopped = 0;
+    shapes.pop();
+    shapes.pop();
+        var i, j;
+		var highestIndex = -1;
+		
+		//getting mouse position correctly
+		var bRect = canvas.getBoundingClientRect();
+		mouseX = (evt.clientX - bRect.left)*(canvas.width/bRect.width);
+		mouseY = (evt.clientY - bRect.top)*(canvas.height/bRect.height);
+		
+		for (i=0; i < shapes.length; i++) {
+			if	(hitTest(shapes[i], mouseX, mouseY)) {
+                
+		shapes[i].x = -1;
+                shapes[i].y = -1;
+                shapes[i].rad = -1;
+                shapes[i].color = -1;                
+		eraseCanvas(); 
+	        	}
+		}
+		redraw();
+}
+
+function redraw() {
+    var j;
+    eraseCanvas(); 
+            for(j= 0; j< shapes.length; j++)
+                {
+                    if(shapes[j].x != -1)
+                    {
+                   
+			        context.beginPath();
+			        context.arc(shapes[j].x, shapes[j].y, shapes[j].rad, 0, 2*Math.PI, false);
+                    context.fillStyle = shapes[j].color;
+			        context.fill();
+                    }
+                }
+}
+
+function getCanvasCoordinates(event) {
+    var x = event.clientX - canvas.getBoundingClientRect().left,
+        y = event.clientY - canvas.getBoundingClientRect().top;
+    return {
+        x: x,
+        y: y
+    };
+}
+
+function takeSnapshot() {
+    snapshot = context.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function restoreSnapshot() {
+    context.putImageData(snapshot, 0, 0);
+}
+
+function draw(position) {
+     var radius = Math.sqrt(Math.pow((dragStartLocation.x - position.x), 2) + Math.pow((dragStartLocation.y - position.y), 2));
+        var i=0;
+		var tempX;
+		var tempY;
+		var tempRad;
+		var tempR;
+		var tempG;
+		var tempB;
+		var tempColor;
+			tempRad = radius;
+			tempX = dragStartLocation.x;
+			tempY = dragStartLocation.y;
+			tempColor = getRndColor();
+			tempShape = {x:tempX, y:tempY, rad:tempRad, color:tempColor};
+			if (dragstopped) { shapes.push(tempShape); }
+			context.beginPath();
+			context.arc(tempX, tempY, tempRad, 0, 2*Math.PI, false);
+                        context.fillStyle = tempColor;
+			context.fill();
+			i++;
+}
+
+function dragStart(evt) {
+   
+            var i, j;
+		var highestIndex = -1;
+		//getting mouse position correctly
+		var bRect = canvas.getBoundingClientRect();
+		mouseX = (evt.clientX - bRect.left)*(canvas.width/bRect.width);
+		mouseY = (evt.clientY - bRect.top)*(canvas.height/bRect.height);		
+		//Now find which shape was clicked
+		for (i=0; i < shapes.length; i++) {
+			if	(hitTest(shapes[i], mouseX, mouseY)) {         
+			    console.log("clicking on circle");
+			}
+		}
+    
+    //Draw Circle
+            dragging = true;
+            dragstopped = 0;
+            dragStartLocation = getCanvasCoordinates(evt);
+            takeSnapshot();
+             } 
+
+ function hitTest(shape,mx,my) {
+		var dx;
+		var dy;
+		dx = Math.abs(mx - shape.x);
+		dy = Math.abs(my - shape.y);
+		return (Math.sqrt(dx*dx + dy*dy) < shape.rad);
+	}
+
+function drag(event) {
+    dragstopped = 0;
+    var position;
+    if (dragging === true) {
+        restoreSnapshot();
+        position = getCanvasCoordinates(event);
+        draw(position);
+    }
+}
+
+function dragStop(event) {
+    dragstopped += 1;
+    dragging = false;
+    restoreSnapshot();
+   var position = getCanvasCoordinates(event);
+  dragEndLocation = getCanvasCoordinates(event);
+    draw(position);
+}
+
+  // RandomColor function
+function getRndColor() {
+    var r = 255 * Math.random() | 0,
+        g = 255 * Math.random() | 0,
+        b = 255 * Math.random() | 0;
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+function eraseCanvas() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    shapes = [];
+}
+
+addEventListener("load",initiate);
+
+// Erase function
+    function clearcanvas()
+{
+    var canvas = document.getElementById('myCanvas'),
+        ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+</script>
+<p id="resetb" align="right">
+  <input type="button" id="reset" onClick="clearcanvas()" value="Reset" >
+</p>
+</body>
+</html>
